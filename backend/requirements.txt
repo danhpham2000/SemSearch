@@ -1,0 +1,7 @@
+langchain
+langchain-openai
+pinecone
+langchain-pinecone
+langchain-community
+fastapi
+pypdf
