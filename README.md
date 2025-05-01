@@ -7,9 +7,8 @@
 
 ## Roadmap
 
-- RAG powered-search based on documents
-- Retrieve relevant infromation needed
-- 
+- RAG powered search based on documents
+- Retrieve relevant information needed
 
 
 ## Tech Stack
