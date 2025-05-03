@@ -8,3 +8,4 @@ pypdf
 langchain-community~=0.3.23
 python-dotenv~=1.1.0
 langchain-text-splitters~=0.3.8
+pinecone-datasets
