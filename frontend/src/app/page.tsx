@@ -119,7 +119,6 @@ export default function Home() {
           <div className="mt-15">
             <h1 className="text-2xl font-semibold text-gray-900">Content</h1>
             {}
-            
           </div>
         </div>
       </div>
