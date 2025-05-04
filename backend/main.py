@@ -9,12 +9,16 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
+from langchain.schema import Document
 import pinecone_datasets
 from dotenv import load_dotenv
 import os
 import time
 
+from pydantic import BaseModel
 from starlette.datastructures import UploadFile
+
+from model import DocumentModel, SearchRequest
 
 load_dotenv()
 app = FastAPI()
@@ -48,26 +52,37 @@ if index_name not in current_indexes:
 index = pc.Index(name=index_name)
 pc_vector_store = PineconeVectorStore(index=index, embedding=embeddings)
 
-@app.post("/documents", response_model=None)
-async def post_documents(file: UploadFile):
-    path = "./documents"
-    os.makedirs(path, exist_ok=True)
-    file_path = os.path.join(path, file.filename)
+@app.post("/documents")
+async def post_documents(file : DocumentModel):
+    doc = Document(page_content=file.content)
+    try:
+        path = "./documents"
+        os.makedirs(path, exist_ok=True)
+        file_path = os.path.join(path, file.filename)
 
-    with open(file_path, "wb") as f:
-        f.write(file.file.read())
-    loader = PyPDFLoader(file_path)
-    docs = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    documents = text_splitter.split_documents(docs)
-    pc_vector_store.add_documents(documents)
+        # Save the uploaded file
+        contents = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
 
-    return {"message": f"{file.filename} processed successfully", "num_chunks": len(documents)}
+        loader = PyPDFLoader(file_path)
+        docs = loader.load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        documents = text_splitter.split_documents(docs)
+        pc_vector_store.add_documents(documents)
+
+        return {"message": f"{file.filename} processed successfully", "num_chunks": len(documents)}
+    except Exception as e:
+        print(e)
+        return {"error": str(e)}
+
+
 
 
 @app.post("/search")
-def search_documents(query):
-    results = pc_vector_store.similarity_search(query, k=3)
+def search_documents(search: SearchRequest):
+    print(search.query)
+    results = pc_vector_store.similarity_search(search.query, k=3)
     return {"results": results}
 
 
